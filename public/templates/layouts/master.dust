@@ -67,7 +67,7 @@
             <ul class="nav nav-sidebar">
                 <li><h3>Matador</h3></li>
                 <li {?overview}class="active"{/overview}><a href="{basepath}/">Overview<span data-bind="visible: stuck() != null && stuck() !== ' (0)', text: stuck" style="color: red"></span></a></li>
-                <li {?complete}class="active"{/complete}><a href="{basepath}/complete/0/10">Complete<span data-bind="visible: complete() != null, text: complete"></span></a></li>
+                <li {?complete}class="active"{/complete}><a href="{basepath}/complete/0/10/all">Complete<span data-bind="visible: complete() != null, text: complete"></span></a></li>
                 <li {?failed}class="active"{/failed}><a href="{basepath}/failed/0/10">Failed<span data-bind="visible: failed() != null, text: failed"></span></a></li>
                 <li {?active}class="active"{/active}><a href="{basepath}/active/0/10">Active<span data-bind="visible: active() != null, text: active"></span></a></li>
                 <li {?pending}class="active"{/pending}><a href="{basepath}/pending/0/10">Pending<span data-bind="visible: pending() != null, text: pending"></span></a></li>
