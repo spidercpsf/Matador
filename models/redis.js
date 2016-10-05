@@ -68,7 +68,13 @@ var getStuckKeys = function(){
     return dfd.promise;
 };
 
-var getStatus = function(status, queueName){
+var getStatus = function(status, queueName, options){
+    console.log("Getting " + status + " with:", options);
+    options = options || {start:0, limit: 10};
+    
+    var begin = options.start;
+    var end = options.limit < 0 ? -1 : options.limit + options.start;
+    
     var dfd = q.defer();
     var getStatusKeysFunction = null;
     if(status === "complete"){
@@ -97,9 +103,11 @@ var getStatus = function(status, queueName){
             var queue = queueName.join(":");
             statusKeys[queue] = []; // This creates an array/object thing with keys of the job type
             if(status === "active" || status === "wait"){
-                multi.push(['lrange', keys[i], 0, -1]);
+                multi.push(['lrange', keys[i], begin, end]);
             }else if(status === "delayed"){
-                multi.push(["zrange", keys[i], 0, -1]);
+                multi.push(["zrange", keys[i], begin, end]);
+            }else if(status === "complete"){
+                multi.push(["lrange", keys[i]+ "_list", begin, end]);
             }else{
                 multi.push(["smembers", keys[i]]);
             }
@@ -179,11 +187,11 @@ var getJobsInList = function(list){
 
 var getStatusCounts = function(){
     var dfd = q.defer();
-    getStatus("active").done(function(active){
-        getStatus("complete").done(function(completed){
-            getStatus("failed").done(function(failed){
-                getStatus("wait").done(function(pendingKeys){
-                    getStatus("delayed").done(function(delayedKeys){
+    getStatus("active", undefined, {start: 0, limit: -1}).done(function(active){
+        getStatus("complete", undefined, {start: 0, limit: -1}).done(function(completed){
+            getStatus("failed", undefined, {start: 0, limit: -1}).done(function(failed){
+                getStatus("wait", undefined, {start: 0, limit: -1}).done(function(pendingKeys){
+                    getStatus("delayed", undefined, {start: 0, limit: -1}).done(function(delayedKeys){
                         getAllKeys().done(function(allKeys){
                           redis.keys("bull:*:id", function (err, keys) {
                             var countObject = {
@@ -210,11 +218,11 @@ var getStatusCounts = function(){
 var formatKeys = function(keys){
     if(!keys) return;
     var dfd = q.defer();
-    getStatus("failed").done(function(failedJobs){
-        getStatus("complete").done(function(completedJobs){
-            getStatus("active").done(function(activeJobs){
-                getStatus("wait").done(function(pendingJobs){
-                    getStatus("delayed").done(function(delayedJobs){
+    getStatus("failed", undefined, {start: 0, limit: -1}).done(function(failedJobs){
+        getStatus("complete", undefined, {start: 0, limit: -1}).done(function(completedJobs){
+            getStatus("active", undefined, {start: 0, limit: -1}).done(function(activeJobs){
+                getStatus("wait", undefined, {start: 0, limit: -1}).done(function(pendingJobs){
+                    getStatus("delayed", undefined, {start: 0, limit: -1}).done(function(delayedJobs){
                         var keyList = [];
                         for(var i = 0, ii = keys.length; i < ii; i++){
                             var arr = keys[i].split(":");
@@ -255,6 +263,7 @@ var removeJobs = function(list){
         multi.push(["lrem", firstPartOfKey+"active", 0, list[i].id]);
         multi.push(["lrem", firstPartOfKey+"wait", 0, list[i].id]);
         multi.push(["srem", firstPartOfKey+"completed", list[i].id]);
+        multi.push(["lrem", firstPartOfKey+"completed_list", 0, list[i].id]);
         multi.push(["srem", firstPartOfKey+"failed", list[i].id]);
         multi.push(["zrem", firstPartOfKey+"delayed", list[i].id]);
 
@@ -280,6 +289,7 @@ var makePendingByType = function(type){
                 //Brute force remove from everything
                 multi.push(["lrem", firstPartOfKey+"active", 0, item]);
                 multi.push(["srem", firstPartOfKey+"completed", item]);
+                multi.push(["lrem", firstPartOfKey+"completed_list", 0, item]);
                 multi.push(["srem", firstPartOfKey+"failed", item]);
                 multi.push(["zrem", firstPartOfKey+"delayed", item]);
                 //Add to pending
@@ -307,6 +317,7 @@ var makePendingById = function(type, id){
     multi.push(["lrem", firstPartOfKey+"active", 0, id]);
     multi.push(["lrem", firstPartOfKey+"wait", 0, id]);
     multi.push(["srem", firstPartOfKey+"completed", id]);
+    multi.push(["lrem", firstPartOfKey+"completed_list", 0, id]);
     multi.push(["srem", firstPartOfKey+"failed", id]);
     multi.push(["zrem", firstPartOfKey+"delayed", id]);
     //Add to pending
@@ -329,7 +340,7 @@ var deleteJobByStatus = function(type, queueName){
         dfd.resolve({success:false, message:"Invalid type: "+type+" not in list of supported types"});
         return dfd.promise;
     }
-    getStatus(type, queueName).done(function(allKeys){
+    getStatus(type, queueName, {start: 0, limit: -1}).done(function(allKeys){
         var multi = [];
         var allKeyObjects = Object.keys(allKeys.keys);
         for(var i = 0, ii = allKeyObjects.length; i < ii; i++){
@@ -340,6 +351,7 @@ var deleteJobByStatus = function(type, queueName){
                 multi.push(["lrem", firstPartOfKey+"active", 0, item]);
                 multi.push(["lrem", firstPartOfKey+"wait", 0, item]);
                 multi.push(["srem", firstPartOfKey+"completed", item]);
+                multi.push(["lrem", firstPartOfKey+"completed_list", 0, item]);
                 multi.push(["srem", firstPartOfKey+"failed", item]);
                 multi.push(["zrem", firstPartOfKey+"delayed", item]);
                 multi.push(["del", firstPartOfKey+item]);
@@ -369,6 +381,7 @@ var deleteJobById = function(type, id){
     multi.push(["lrem", firstPartOfKey+"active", 0, id]);
     multi.push(["lrem", firstPartOfKey+"wait", 0, id]);
     multi.push(["srem", firstPartOfKey+"completed", id]);
+    multi.push(["lrem", firstPartOfKey+"completed_list", 0, id]);
     multi.push(["srem", firstPartOfKey+"failed", id]);
     multi.push(["zrem", firstPartOfKey+"delayed", id]);
     multi.push(["del", firstPartOfKey+id]);

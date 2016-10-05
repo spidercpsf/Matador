@@ -12,6 +12,8 @@ Matador
             <li><a href="#" onclick="redisHandler.fn.deleteByStatus('{type}');">Delete all {type} jobs</a></li>
             {@if cond="'{type}'!='Pending'"}<li><a href="#" onclick="redisHandler.fn.pendingByStatus('{type}');">Revert all {type} jobs to Pending</a></li>{/if}
         </ul>
+        <button class="btn btn-default"><a href="{back}" >Back</a></button>
+        <button class="btn btn-default"><a href="{next}" >Next</a></button>
     </span>
 </h1>
 <div class="table-responsive" data-bind="visible: keys().length > 0">
