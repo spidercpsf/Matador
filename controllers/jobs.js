@@ -46,7 +46,9 @@ module.exports = function (app) {
     app.post('/api/jobs/create', function(req, res){
         var error;
         var payloadObject;
+        var optsObject;
         var payload = req.body.payload;
+        var opts = req.body.opts;
         var queue = req.body && req.body.queue;
         if (!queue){
             error = 'No queue specified';
@@ -54,6 +56,7 @@ module.exports = function (app) {
         if (!error){
             try {
                 payloadObject = JSON.parse(req.body.payload);
+                optsObject = JSON.parse(req.body.opts || "{}");
             } catch (e) {
                 error = 'Invalid JSON';
             }
@@ -61,7 +64,7 @@ module.exports = function (app) {
         if (error) {
             return res.status(400).send(error);
         } else {
-            bullModel.createJob(req.app.locals.options.redis, queue, payloadObject)
+            bullModel.createJob(req.app.locals.options.redis, queue, payloadObject, optsObject)
                     .done(function(){return res.status(200).send('OK');});
         }
 

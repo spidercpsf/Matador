@@ -14,13 +14,13 @@ var createQueue = _.memoize(
   }
 );
 
-var createJob = function createJob(redisOptions, queueName, payload){
+var createJob = function createJob(redisOptions, queueName, payload, opts){
   var options = redisOptions.options || {};
   if(redisOptions.password){
     options.auth_pass = redisOptions.password;
   }
   var queue = createQueue(queueName, redisOptions.port, redisOptions.host, options);
-  return queue.add(payload);
+  return queue.add(payload, opts);
 };
 
 module.exports.createJob = createJob; // Creates a job
