@@ -69,11 +69,11 @@ var getStuckKeys = function(){
 };
 
 var getStatus = function(status, queueName, options){
-    console.log("Getting " + status + " with:", options);
+    console.log("Getting " + status + " with:", queueName, options);
     options = options || {start:0, limit: 10};
     
     var begin = options.start;
-    var end = options.limit < 0 ? -1 : options.limit + options.start;
+    var end = options.limit < 0 ? -1 : options.limit + options.start - 1;
     
     var dfd = q.defer();
     var getStatusKeysFunction = null;
@@ -97,6 +97,11 @@ var getStatus = function(status, queueName, options){
     getStatusKeysFunction(queueName).done(function(keys){
         var multi = [];
         var statusKeys = [];
+        var isGetAllCompleted = ((typeof queueName == "undefined" || queueName == "all") && (status == "complete"));
+        if(isGetAllCompleted){ //if get all -> using global
+            multi.push(["lrange", "bull:completed_list", begin, end]);
+        }
+        
         for(var i = 0, ii = keys.length; i < ii; i++){
              var arr = keys[i].split(":");
             var queueName = arr.slice(1, arr.length - 1);
@@ -113,13 +118,28 @@ var getStatus = function(status, queueName, options){
             }
         }
         redis.multi(multi).exec(function(err, data){
-            var statusKeyKeys = Object.keys(statusKeys); // Get the keys from the object we created earlier...
-            var count = 0;
-            for(var k = 0, kk = data.length; k < kk; k++){
-                statusKeys[statusKeyKeys[k]] = data[k];
-                count += data[k].length;
+            if(isGetAllCompleted){ //if get all -> using global
+                var list = data[0];
+                var rt_list = [];
+                for(var i = 0; i < list.length; i++){
+                    var key_parts = list[i].split("@");
+                    var queueName = key_parts[0];
+                    var jobId = key_parts[1];
+                    
+                    rt_list[queueName] = rt_list[queueName] || [];
+                    rt_list[queueName].push(jobId);
+                }
+                
+                dfd.resolve({keys: rt_list, count: list.length});   
+            }else{
+                var statusKeyKeys = Object.keys(statusKeys); // Get the keys from the object we created earlier...
+                var count = 0;
+                for(var k = 0, kk = data.length; k < kk; k++){
+                    statusKeys[statusKeyKeys[k]] = data[k];
+                    count += data[k].length;
+                }
+                dfd.resolve({keys: statusKeys, count: count});   
             }
-            dfd.resolve({keys: statusKeys, count: count});
         });
     });
     return dfd.promise;
