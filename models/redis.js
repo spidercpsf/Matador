@@ -453,7 +453,9 @@ var getDataForKeys = function(keys){
     redis.multi(multi).exec(function(err, results){
         for(var i = 0, ii = keys.length; i < ii; i++){
             keys[i].data = results[i] ? results[i].data : null;
+            keys[i].timestamp = results[i] ? results[i].timestamp : null;
         }
+        keys = _.sortBy(keys, function(key){return -1*parseInt(key.timestamp);}); 
         dfd.resolve(keys);
     });
     return dfd.promise;
