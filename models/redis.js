@@ -69,6 +69,7 @@ var getStuckKeys = function(){
 };
 
 var getStatus = function(status, queueName, options){
+    var isGetAllCompleted = ((typeof queueName == "undefined" || queueName == "all") && (status == "complete"));
     console.log("Getting " + status + " with:", queueName, options);
     options = options || {start:0, limit: 10};
     
@@ -97,7 +98,6 @@ var getStatus = function(status, queueName, options){
     getStatusKeysFunction(queueName).done(function(keys){
         var multi = [];
         var statusKeys = [];
-        var isGetAllCompleted = ((typeof queueName == "undefined" || queueName == "all") && (status == "complete"));
         if(isGetAllCompleted){ //if get all -> using global
             multi.push(["lrange", "bull:completed_list", begin, end]);
         }
@@ -117,6 +117,7 @@ var getStatus = function(status, queueName, options){
                 multi.push(["smembers", keys[i]]);
             }
         }
+        console.log(multi);
         redis.multi(multi).exec(function(err, data){
             if(isGetAllCompleted){ //if get all -> using global
                 var list = data[0];
