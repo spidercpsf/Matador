@@ -24,8 +24,8 @@ module.exports = function (app) {
                                 counts: countObject, 
                                 complete: true, 
                                 type: "Complete", 
-                                back: '/complete/' + (page*1-1) + '/' + limit, 
-                                next: '/complete/' + (page*1+1) + '/' + limit
+                                back: '/complete/' + (page*1-1) + '/' + limit + '/' + queue, 
+                                next: '/complete/' + (page*1+1) + '/' + limit + '/' + queue
                             };
                             dfd.resolve(model);
                         });

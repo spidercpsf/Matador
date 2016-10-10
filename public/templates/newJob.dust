@@ -17,6 +17,10 @@ Matador
         <br>
         <textarea name="payload" id="textarea" style="font-family: monospace;" class="form-control" cols="45" rows="5" ></textarea>
         <br>
+        <label for="payload">Opts:</label>
+        <br>
+        <textarea name="opts" id="textarea" style="font-family: monospace;" class="form-control" cols="45" rows="5" ></textarea>
+        <br>
         <input onclick="redisHandler.fn.createJob()" id="button" class="btn btn-default" value="Create" />
       </div>
     </form>

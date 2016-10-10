@@ -218,11 +218,11 @@ var getStatusCounts = function(){
 var formatKeys = function(keys){
     if(!keys) return;
     var dfd = q.defer();
-    getStatus("failed", undefined, {start: 0, limit: -1}).done(function(failedJobs){
-        getStatus("complete", undefined, {start: 0, limit: -1}).done(function(completedJobs){
-            getStatus("active", undefined, {start: 0, limit: -1}).done(function(activeJobs){
-                getStatus("wait", undefined, {start: 0, limit: -1}).done(function(pendingJobs){
-                    getStatus("delayed", undefined, {start: 0, limit: -1}).done(function(delayedJobs){
+    getStatus("failed", undefined, {start: 0, limit: keys.length}).done(function(failedJobs){
+        getStatus("complete", undefined, {start: 0, limit: keys.length}).done(function(completedJobs){
+            getStatus("active", undefined, {start: 0, limit: keys.length}).done(function(activeJobs){
+                getStatus("wait", undefined, {start: 0, limit: keys.length}).done(function(pendingJobs){
+                    getStatus("delayed", undefined, {start: 0, limit: keys.length}).done(function(delayedJobs){
                         var keyList = [];
                         for(var i = 0, ii = keys.length; i < ii; i++){
                             var arr = keys[i].split(":");
@@ -241,8 +241,10 @@ var formatKeys = function(keys){
                             else if(delayedJobs.keys[explodedKeys[1]] && typeof delayedJobs.keys[explodedKeys[1]].indexOf === "function" && delayedJobs.keys[explodedKeys[1]].indexOf(explodedKeys[2]) !== -1) status = "delayed";
                             keyList.push({id: explodedKeys[2], type: explodedKeys[1], status: status});
                         }
-
-                        keyList = _.sortBy(keyList, function(key){return parseInt(key.id);});
+                        
+                        //dont need to sort -> comment out
+                        //keyList = _.sortBy(keyList, function(key){return parseInt(key.id);}); 
+                        
                         dfd.resolve(keyList);
                     });
                 });
