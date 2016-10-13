@@ -26,6 +26,7 @@ Matador
             <th>Status</th>
             <th data-bind="visible: keys().length > 0 && keys()[0].progress != undefined">Progress</th>
             <th data-bind="visible: keys().length > 0 && keys()[0].delayUntil != undefined">Delay until</th>
+            <th>Last Update</th>
             <th>Manage</th>
         </tr>
         </thead>
@@ -39,6 +40,7 @@ Matador
             <td data-bind="text: status"></td>
             <td data-bind="visible: keys.length > 0 && keys[0].progress != undefined, text: keys[0].progress != undefined ? progress : ''"></td>
             <td data-bind="visible: keys.length > 0 && keys[0].delayUntil != undefined, text: keys[0].delayUntil != undefined ? delayUntil : ''"></td>
+            <td data-bind="text: new Date(1*timestamp).toLocaleString()"></td>
             <td>
                 <button class="btn btn-default" data-bind="click: redisHandler.fn.deleteById" title="Delete">
                     <i class="fa fa-trash-o"></i>
