@@ -12,6 +12,7 @@ module.exports = function (app) {
         var page = req.params.page || 0;
         var limit = req.params.limit || 10;
         var queue = req.params.queue || undefined;
+        var queue_raw = queue || "all";
         if(queue === 'all') queue = undefined;
         
         redisModel.getStatus("complete", queue, {start: page*limit, limit: limit*1}).done(function(completed){
@@ -24,8 +25,8 @@ module.exports = function (app) {
                                 counts: countObject, 
                                 complete: true, 
                                 type: "Complete", 
-                                back: '/complete/' + (page*1-1) + '/' + limit + '/' + queue, 
-                                next: '/complete/' + (page*1+1) + '/' + limit + '/' + queue
+                                back: '/complete/' + (page*1-1) + '/' + limit + '/' + queue_raw, 
+                                next: '/complete/' + (page*1+1) + '/' + limit + '/' + queue_raw
                             };
                             dfd.resolve(model);
                         });
