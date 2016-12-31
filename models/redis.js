@@ -125,10 +125,18 @@ var getStatus = function(status, queueName, options){
                 for(var i = 0; i < list.length; i++){
                     var key_parts = list[i].split("@");
                     var queueName = key_parts[0];
-                    var jobId = key_parts[1];
-                    
-                    rt_list[queueName] = rt_list[queueName] || [];
-                    rt_list[queueName].push(jobId);
+                    console.log(queueName, rt_list);
+                    if(queueName && rt_list[queueName]){
+                        try{
+                            var jobId = key_parts[1];
+                            rt_list[queueName] = rt_list[queueName] || [];
+                            rt_list[queueName].push(jobId);
+                        }catch(e){
+                            console.error(e);
+                        }
+                    } else {
+                        console.error("Error with key:" + list[i]);
+                    }
                 }
                 
                 dfd.resolve({keys: rt_list, count: list.length});   
